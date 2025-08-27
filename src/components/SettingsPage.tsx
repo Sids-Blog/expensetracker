@@ -472,16 +472,7 @@ const SettingsPage = () => {
           </CardContent>
         </Card>
 
-        <Card>
-          <CardHeader>
-            <CardTitle>Suite Apps</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <Button onClick={() => navigate('/budget')}>
-              Go to Budget Page
-            </Button>
-          </CardContent>
-        </Card>
+
       </div>
     </div>
   );

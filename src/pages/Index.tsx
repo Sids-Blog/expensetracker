@@ -43,24 +43,6 @@ const HomePage = () => {
       {/* Main Content */}
       <main className="flex-1 flex flex-col items-center justify-center px-4">
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-8 w-full max-w-2xl mt-12">
-          {/* Admin Tools Card */}
-          <Card
-            className="cursor-pointer transition-transform hover:scale-105 shadow-lg border-purple-200"
-            onClick={() => navigate("/admin")}
-          >
-            <CardHeader>
-              <CardTitle className="text-xl font-semibold flex items-center gap-2">
-                <Settings className="h-6 w-6 text-purple-600" />
-                Admin Tools
-              </CardTitle>
-            </CardHeader>
-            <CardContent>
-              <p className="text-gray-600">
-                Manage application settings, currency preferences, and other global configurations.
-              </p>
-            </CardContent>
-          </Card>
-
           {/* Expense Card */}
           <Card
             className="cursor-pointer transition-transform hover:scale-105 shadow-lg border-blue-200"
@@ -97,6 +79,24 @@ const HomePage = () => {
             <CardContent>
               <p className="text-gray-600 text-base">
                 Set monthly budgets, monitor your spending, and analyze your financial health.
+              </p>
+            </CardContent>
+          </Card>
+
+          {/* Admin Tools Card */}
+          <Card
+            className="cursor-pointer transition-transform hover:scale-105 shadow-lg border-purple-200"
+            onClick={() => navigate("/admin")}
+          >
+            <CardHeader>
+              <CardTitle className="text-xl font-semibold flex items-center gap-2">
+                <Settings className="h-6 w-6 text-purple-600" />
+                Admin Tools
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              <p className="text-gray-600">
+                Manage application settings, currency preferences, and other global configurations.
               </p>
             </CardContent>
           </Card>

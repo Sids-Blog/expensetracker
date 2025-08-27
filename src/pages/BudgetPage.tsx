@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { useData } from '@/lib/data-context';
 import { useTransactions } from '@/lib/transaction-context';
 import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card';
@@ -112,10 +112,14 @@ const getCurrencySymbol = (curr: string) => {
 const BudgetPage: React.FC = () => {
   const { currency } = useCurrency();
   const { expenseCategories, incomeCategories } = useData();
-  const { transactions } = useTransactions();
+  const { transactions, isOffline, isSyncing } = useTransactions();
   const { toast } = useToast();
   const { logout } = useAuth();
   const navigate = useNavigate();
+  
+  // Offline state management
+  const [lastSync, setLastSync] = useState<string | null>(null);
+  const lastSyncRef = useRef<string | null>(null);
 
   // Budget-specific categories (local state, not shared)
   // Budget-specific categories and tags state
@@ -155,6 +159,27 @@ const BudgetPage: React.FC = () => {
       coordinateGetter: sortableKeyboardCoordinates,
     })
   );
+
+  // Update last sync time in localStorage when online and not syncing
+  useEffect(() => {
+    if (!isOffline && !isSyncing) {
+      const now = new Date();
+      const istOffset = 5.5 * 60 * 60 * 1000;
+      const ist = new Date(now.getTime() + (now.getTimezoneOffset() * 60000) + istOffset);
+      const pad = (n: number) => n.toString().padStart(2, '0');
+      const dateStr = `${pad(ist.getDate())}-${pad(ist.getMonth() + 1)}-${ist.getFullYear()}`;
+      const timeStr = `${pad(ist.getHours())}:${pad(ist.getMinutes())}:${pad(ist.getSeconds())}`;
+      const syncStr = `${dateStr} ${timeStr} IST`;
+      localStorage.setItem('last_sync_ist', syncStr);
+      setLastSync(syncStr);
+      lastSyncRef.current = syncStr;
+    } else if (isOffline) {
+      // On going offline, read last sync from localStorage
+      const stored = localStorage.getItem('last_sync_ist');
+      setLastSync(stored);
+      lastSyncRef.current = stored;
+    }
+  }, [isOffline, isSyncing]);
 
   // Fetch tags, categories, and transactions from Supabase on load and after any change
   const fetchAllData = async () => {
@@ -929,6 +954,22 @@ const BudgetPage: React.FC = () => {
 
   return (
     <div className="w-full h-full min-h-screen bg-gradient-to-br from-emerald-50 to-blue-50">
+      {/* Offline/Sync Banner */}
+      {(isOffline || isSyncing) && (
+        <div className={`w-full text-center py-2 text-white ${isOffline ? 'bg-red-600' : 'bg-blue-600'}`}
+             style={{ zIndex: 1000 }}>
+          {isOffline ? (
+            <>
+              You are offline. Changes will sync when you are back online.
+              {lastSync && (
+                <div className="text-xs text-white/80 mt-1">Last sync: {lastSync}</div>
+              )}
+            </>
+          ) : (
+            'Syncing changes...'
+          )}
+        </div>
+      )}
       <header className="bg-white shadow-sm border-b">
         <div className="max-w-7xl mx-auto px-2 sm:px-6 lg:px-8">
           <div className="flex justify-between items-center h-16">
