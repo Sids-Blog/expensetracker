@@ -1,20 +1,18 @@
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Textarea } from "@/components/ui/textarea";
+import { FormField } from "@/components/ui/form-field";
 import { useToast } from "@/hooks/use-toast";
 import { useCurrency } from "@/lib/currency-context";
-import { useData } from "@/lib/data-context";
-import { useTransactions } from "@/lib/transaction-context";
-import { DollarSign, Euro, IndianRupee, PoundSterling, TrendingDown } from "lucide-react";
+import { useEnhancedData } from "@/lib/enhanced-data-context";
+import { useEnhancedTransactions } from "@/lib/enhanced-transaction-context";
+import { TrendingDown } from "lucide-react";
+import { getCurrencyIcon, getCurrencySymbol } from "@/components/ui/currency-display";
 import { useState } from "react";
 
 const ExpenseForm = () => {
   const { currency } = useCurrency();
-  const { expenseCategories, paymentMethods } = useData();
-  const { addTransaction, isLoading } = useTransactions();
+  const { expenseCategories, paymentMethods } = useEnhancedData();
+  const { addTransaction, isLoading } = useEnhancedTransactions();
   const { toast } = useToast();
   
   const [amount, setAmount] = useState("");
@@ -25,23 +23,7 @@ const ExpenseForm = () => {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [fullySettled, setFullySettled] = useState(true);
 
-  const getCurrencyIcon = () => {
-    switch (currency) {
-      case 'INR': return <IndianRupee className="h-4 w-4" />;
-      case 'EUR': return <Euro className="h-4 w-4" />;
-      case 'GBP': return <PoundSterling className="h-4 w-4" />;
-      default: return <DollarSign className="h-4 w-4" />;
-    }
-  };
 
-  const getCurrencySymbol = () => {
-    switch (currency) {
-      case 'INR': return '₹';
-      case 'EUR': return '€';
-      case 'GBP': return '£';
-      default: return '$';
-    }
-  };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -66,7 +48,7 @@ const ExpenseForm = () => {
         description,
         currency,
         payment_method: paymentMethod,
-        fullySettled, // new field
+        fully_settled: fullySettled, // new field
       });
 
       // Reset form
@@ -106,98 +88,72 @@ const ExpenseForm = () => {
         </CardHeader>
         <CardContent>
           <form onSubmit={handleSubmit} className="space-y-4">
-          <div className="grid grid-cols-2 gap-4">
-            <div className="space-y-2">
-              <Label htmlFor="amount" className="flex items-center gap-2">
-                {getCurrencyIcon()}
-                Amount ({getCurrencySymbol()})
-              </Label>
-              <Input
-                id="amount"
+            <div className="grid grid-cols-2 gap-4">
+              <FormField
                 type="number"
+                label={`Amount (${getCurrencySymbol(currency as any)})`}
+                value={amount}
+                onChange={setAmount}
+                placeholder="0.00"
                 step="0.01"
                 min="0"
-                placeholder="0.00"
-                value={amount}
-                onChange={(e) => setAmount(e.target.value)}
-                disabled={isFormDisabled}
                 required
+                disabled={isFormDisabled}
+                icon={getCurrencyIcon(currency as any)}
               />
-            </div>
-            <div className="space-y-2">
-              <Label htmlFor="date">Date</Label>
-              <Input
-                id="date"
+              <FormField
                 type="date"
+                label="Date"
                 value={date}
-                onChange={(e) => setDate(e.target.value)}
-                disabled={isFormDisabled}
+                onChange={setDate}
                 required
-              />
-              </div>
-            </div>
-
-          <div className="space-y-2">
-              <Label htmlFor="category">Category</Label>
-            <Select value={category} onValueChange={setCategory} disabled={isFormDisabled}>
-                <SelectTrigger>
-                <SelectValue placeholder="Select a category" />
-                </SelectTrigger>
-                <SelectContent>
-                {expenseCategories.map((cat) => (
-                  <SelectItem key={cat} value={cat}>
-                    {cat}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
-
-          <div className="space-y-2">
-            <Label htmlFor="payment">Payment Method</Label>
-            <Select value={paymentMethod} onValueChange={setPaymentMethod} disabled={isFormDisabled}>
-                <SelectTrigger>
-                  <SelectValue placeholder="Select payment method" />
-                </SelectTrigger>
-                <SelectContent>
-                {paymentMethods.map((method) => (
-                  <SelectItem key={method} value={method}>
-                    {method}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
-
-          <div className="space-y-2">
-            <Label htmlFor="description">Description (Optional)</Label>
-              <Textarea
-              id="description"
-              placeholder="What was this expense for?"
-              value={description}
-              onChange={(e) => setDescription(e.target.value)}
-              disabled={isFormDisabled}
-                rows={3}
-              />
-            </div>
-            {/* Fully Settled Checkbox */}
-            <div className="flex items-center space-x-2">
-              <input
-                id="fully-settled"
-                type="checkbox"
-                checked={fullySettled}
-                onChange={e => setFullySettled(e.target.checked)}
                 disabled={isFormDisabled}
-                className="h-4 w-4"
               />
-              <Label htmlFor="fully-settled" className="text-sm cursor-pointer">
-                Fully settled (Uncheck if Recovery needs to be done)
-              </Label>
             </div>
 
-          <Button type="submit" className="w-full" disabled={isFormDisabled}>
-            {isSubmitting ? 'Adding Expense...' : 'Add Expense'}
-          </Button>
+            <FormField
+              type="select"
+              label="Category"
+              value={category}
+              onChange={setCategory}
+              placeholder="Select a category"
+              options={expenseCategories.map(cat => ({ value: cat, label: cat }))}
+              required
+              disabled={isFormDisabled}
+            />
+
+            <FormField
+              type="select"
+              label="Payment Method"
+              value={paymentMethod}
+              onChange={setPaymentMethod}
+              placeholder="Select payment method"
+              options={paymentMethods.map(method => ({ value: method, label: method }))}
+              required
+              disabled={isFormDisabled}
+            />
+
+            <FormField
+              type="textarea"
+              label="Description (Optional)"
+              value={description}
+              onChange={setDescription}
+              placeholder="What was this expense for?"
+              rows={3}
+              disabled={isFormDisabled}
+            />
+
+            <FormField
+              type="checkbox"
+              label="Fully settled (Uncheck if Recovery needs to be done)"
+              checked={fullySettled}
+              onChange={setFullySettled}
+              disabled={isFormDisabled}
+            />
+
+            <Button type="submit" className="w-full" disabled={isFormDisabled}>
+              {isSubmitting ? 'Adding Expense...' : 'Add Expense'}
+            </Button>
           </form>
         </CardContent>
       </Card>

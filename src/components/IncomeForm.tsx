@@ -1,20 +1,18 @@
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Textarea } from "@/components/ui/textarea";
+import { FormField } from "@/components/ui/form-field";
 import { useToast } from "@/hooks/use-toast";
 import { useCurrency } from "@/lib/currency-context";
-import { useData } from "@/lib/data-context";
-import { useTransactions } from "@/lib/transaction-context";
-import { DollarSign, Euro, IndianRupee, PoundSterling, TrendingUp } from "lucide-react";
+import { useEnhancedData } from "@/lib/enhanced-data-context";
+import { useEnhancedTransactions } from "@/lib/enhanced-transaction-context";
+import { TrendingUp } from "lucide-react";
+import { getCurrencyIcon, getCurrencySymbol } from "@/components/ui/currency-display";
 import { useState } from "react";
 
 const IncomeForm = () => {
   const { currency } = useCurrency();
-  const { incomeCategories } = useData();
-  const { addTransaction, isLoading } = useTransactions();
+  const { incomeCategories } = useEnhancedData();
+  const { addTransaction, isLoading } = useEnhancedTransactions();
   const { toast } = useToast();
   
   const [amount, setAmount] = useState("");
@@ -23,23 +21,7 @@ const IncomeForm = () => {
   const [date, setDate] = useState(new Date().toISOString().split('T')[0]);
   const [isSubmitting, setIsSubmitting] = useState(false);
 
-  const getCurrencyIcon = () => {
-    switch (currency) {
-      case 'INR': return <IndianRupee className="h-4 w-4" />;
-      case 'EUR': return <Euro className="h-4 w-4" />;
-      case 'GBP': return <PoundSterling className="h-4 w-4" />;
-      default: return <DollarSign className="h-4 w-4" />;
-    }
-  };
 
-  const getCurrencySymbol = () => {
-    switch (currency) {
-      case 'INR': return '₹';
-      case 'EUR': return '€';
-      case 'GBP': return '£';
-      default: return '$';
-    }
-  };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -101,68 +83,53 @@ const IncomeForm = () => {
         </CardHeader>
         <CardContent>
           <form onSubmit={handleSubmit} className="space-y-4">
-          <div className="grid grid-cols-2 gap-4">
-            <div className="space-y-2">
-              <Label htmlFor="amount" className="flex items-center gap-2">
-                {getCurrencyIcon()}
-                Amount ({getCurrencySymbol()})
-              </Label>
-              <Input
-                id="amount"
+            <div className="grid grid-cols-2 gap-4">
+              <FormField
                 type="number"
+                label={`Amount (${getCurrencySymbol(currency as any)})`}
+                value={amount}
+                onChange={setAmount}
+                placeholder="0.00"
                 step="0.01"
                 min="0"
-                placeholder="0.00"
-                value={amount}
-                onChange={(e) => setAmount(e.target.value)}
-                disabled={isFormDisabled}
                 required
+                disabled={isFormDisabled}
+                icon={getCurrencyIcon(currency as any)}
               />
-            </div>
-            <div className="space-y-2">
-              <Label htmlFor="date">Date</Label>
-              <Input
-                id="date"
+              <FormField
                 type="date"
+                label="Date"
                 value={date}
-                onChange={(e) => setDate(e.target.value)}
-                disabled={isFormDisabled}
+                onChange={setDate}
                 required
+                disabled={isFormDisabled}
               />
-              </div>
             </div>
 
-          <div className="space-y-2">
-              <Label htmlFor="source">Income Source</Label>
-            <Select value={source} onValueChange={setSource} disabled={isFormDisabled}>
-                <SelectTrigger>
-                  <SelectValue placeholder="Select income source" />
-                </SelectTrigger>
-                <SelectContent>
-                {incomeCategories.map((src) => (
-                  <SelectItem key={src} value={src}>
-                    {src}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
-
-          <div className="space-y-2">
-            <Label htmlFor="description">Description (Optional)</Label>
-              <Textarea
-              id="description"
-              placeholder="What was this income for?"
-              value={description}
-              onChange={(e) => setDescription(e.target.value)}
+            <FormField
+              type="select"
+              label="Income Source"
+              value={source}
+              onChange={setSource}
+              placeholder="Select income source"
+              options={incomeCategories.map(src => ({ value: src, label: src }))}
+              required
               disabled={isFormDisabled}
-                rows={3}
-              />
-            </div>
+            />
 
-          <Button type="submit" className="w-full" disabled={isFormDisabled}>
-            {isSubmitting ? 'Adding Income...' : 'Add Income'}
-          </Button>
+            <FormField
+              type="textarea"
+              label="Description (Optional)"
+              value={description}
+              onChange={setDescription}
+              placeholder="What was this income for?"
+              rows={3}
+              disabled={isFormDisabled}
+            />
+
+            <Button type="submit" className="w-full" disabled={isFormDisabled}>
+              {isSubmitting ? 'Adding Income...' : 'Add Income'}
+            </Button>
           </form>
         </CardContent>
       </Card>

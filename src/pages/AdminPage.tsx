@@ -2,13 +2,14 @@ import React, { useState, useEffect, useRef } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import SettingsPage from '@/components/SettingsPage';
+import DropdownManager from '@/components/DropdownManager';
 import { Settings, Home } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
-import { useTransactions } from '@/lib/transaction-context';
+import { useEnhancedTransactions } from '@/lib/enhanced-transaction-context';
 
 const AdminPage: React.FC = () => {
   const navigate = useNavigate();
-  const { isOffline, isSyncing } = useTransactions();
+  const { isOffline, isSyncing } = useEnhancedTransactions();
   
   // Offline state management
   const [lastSync, setLastSync] = useState<string | null>(null);
@@ -57,7 +58,7 @@ const AdminPage: React.FC = () => {
       <header className="w-full flex items-center justify-between px-6 py-4 bg-white/80 shadow-sm border-b">
         <div className="flex items-center gap-4">
           <h1 className="text-2xl sm:text-3xl font-bold text-blue-700 tracking-tight">
-            Admin Dashboard
+            Settings
           </h1>
         </div>
         <div className="flex items-center gap-2">
@@ -75,18 +76,20 @@ const AdminPage: React.FC = () => {
 
       {/* Main Content */}
       <main className="flex-1 p-4 sm:p-6 lg:p-8">
-        <div className="max-w-7xl mx-auto">
-          <Card className="mb-6 bg-gradient-to-br from-white to-blue-50 shadow-lg">
+        <div className="max-w-7xl mx-auto space-y-6">
+          <Card className="bg-gradient-to-br from-white to-blue-50 shadow-lg">
             <CardHeader className="pb-2">
               <CardTitle className="flex items-center gap-3">
                 <Settings className="h-6 w-6 text-blue-600" />
-                <span>Admin Tools</span>
+                <span>Application Settings</span>
               </CardTitle>
             </CardHeader>
             <CardContent>
               <SettingsPage />
             </CardContent>
           </Card>
+          
+          <DropdownManager />
         </div>
       </main>
     </div>

@@ -1,24 +1,20 @@
-import { Button } from '@/components/ui/button'
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
-import { Input } from '@/components/ui/input'
-import { Label } from '@/components/ui/label'
-import { useAuth } from '@/hooks/useAuth'
-import { Loader2, Lock, Monitor, Smartphone } from 'lucide-react'
-import React, { useState } from 'react'
+import { Button } from '@/components/ui/button';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { FormField } from '@/components/ui/form-field';
+import { useAuth } from '@/lib/auth-context';
+import { Loader2, Lock } from 'lucide-react';
+import { useState } from 'react';
+import { Link } from 'react-router-dom';
 
 export default function LoginPage() {
-  const [accessKey, setAccessKey] = useState('')
-  const { login, isLoading } = useAuth()
+  const [email, setEmail] = useState('');
+  const [password, setPassword] = useState('');
+  const { signIn, isLoading } = useAuth();
 
   const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault()
-    
-    if (!accessKey.trim()) {
-      return
-    }
-
-    await login(accessKey.trim())
-  }
+    e.preventDefault();
+    await signIn(email, password);
+  };
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 flex items-center justify-center p-4">
@@ -29,47 +25,49 @@ export default function LoginPage() {
           </div>
           <CardTitle className="text-2xl font-bold">Welcome Back</CardTitle>
           <CardDescription>
-            Enter your access key to continue
+            Sign in to your account to continue
           </CardDescription>
         </CardHeader>
         <CardContent>
-          {/* IST date/time above access key */}
-          <div className="mb-4 text-center text-xs text-gray-500">
-            {(() => {
-              const now = new Date();
-              const istOffset = 5.5 * 60 * 60 * 1000;
-              const ist = new Date(now.getTime() + (now.getTimezoneOffset() * 60000) + istOffset);
-              const pad = (n: number) => n.toString().padStart(2, '0');
-              const dateStr = `${pad(ist.getDate())}-${pad(ist.getMonth() + 1)}-${ist.getFullYear()}`;
-              const timeStr = `${pad(ist.getHours())}:${pad(ist.getMinutes())}:${pad(ist.getSeconds())}`;
-              return `${dateStr} ${timeStr} IST`;
-            })()}
-          </div>
           <form onSubmit={handleSubmit} className="space-y-4">
-            <div className="space-y-2">
-              <Label htmlFor="accessKey">Access Key</Label>
-              <Input
-                id="accessKey"
-                type="password"
-                placeholder="Enter your access key"
-                value={accessKey}
-                onChange={(e) => setAccessKey(e.target.value)}
-                disabled={isLoading}
-                className="w-full"
-                autoComplete="current-password"
-                autoFocus
-              />
+            <FormField
+              type="email"
+              label="Email"
+              value={email}
+              onChange={setEmail}
+              placeholder="your@email.com"
+              required
+              disabled={isLoading}
+            />
+
+            <FormField
+              type="password"
+              label="Password"
+              value={password}
+              onChange={setPassword}
+              placeholder="Enter your password"
+              required
+              disabled={isLoading}
+            />
+
+            <div className="flex justify-end">
+              <Link 
+                to="/forgot-password" 
+                className="text-sm text-blue-600 hover:text-blue-700"
+              >
+                Forgot password?
+              </Link>
             </div>
             
             <Button 
               type="submit" 
               className="w-full" 
-              disabled={isLoading || !accessKey.trim()}
+              disabled={isLoading || !email.trim() || !password.trim()}
             >
               {isLoading ? (
                 <>
                   <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                  Authenticating...
+                  Signing in...
                 </>
               ) : (
                 'Sign In'
@@ -77,26 +75,14 @@ export default function LoginPage() {
             </Button>
           </form>
 
-          <div className="mt-6 pt-6 border-t border-gray-200">
-            <div className="text-center text-sm text-gray-600">
-              <p className="mb-2">Cross-device authentication enabled</p>
-              <div className="flex items-center justify-center space-x-4 text-xs">
-                <div className="flex items-center space-x-1">
-                  <Smartphone className="w-3 h-3" />
-                  <span>Mobile</span>
-                </div>
-                <div className="flex items-center space-x-1">
-                  <Monitor className="w-3 h-3" />
-                  <span>Desktop</span>
-                </div>
-              </div>
-              <p className="mt-2 text-xs text-gray-500">
-                Enter your access key once and use the app on all your devices
-              </p>
-            </div>
+          <div className="mt-6 text-center text-sm">
+            <span className="text-gray-600">Don't have an account? </span>
+            <Link to="/signup" className="text-blue-600 hover:text-blue-700 font-medium">
+              Sign up
+            </Link>
           </div>
         </CardContent>
       </Card>
     </div>
-  )
-} 
+  );
+}

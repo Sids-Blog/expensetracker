@@ -1,9 +1,9 @@
 {
-  "name": "vite_react_shadcn_ts",
+  "name": "personal-finance-tracker",
   "private": true,
-  "version": "0.0.0",
+  "version": "1.0.0",
   "type": "module",
-  "homepage": " https://sids-blog.github.io/FirstApp",
+  "description": "A reusable personal finance tracking application built with React, TypeScript, and Supabase",
   "scripts": {
     "dev": "vite",
     "build": "vite build",

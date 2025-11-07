@@ -1,18 +1,18 @@
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { Toaster } from "@/components/ui/toaster";
 import { TooltipProvider } from "@/components/ui/tooltip";
-import { AuthProvider, useAuth } from "@/hooks/useAuth";
+import { AuthProvider, useAuth } from "@/lib/auth-context";
 import { CurrencyProvider } from "@/lib/currency-context";
-import { DataProvider } from "@/lib/data-context";
-import { TransactionProvider } from "@/lib/transaction-context";
+import { EnhancedDataProvider as DataProvider } from "@/lib/enhanced-data-context";
+import { EnhancedTransactionProvider as TransactionProvider } from "@/lib/enhanced-transaction-context";
 import { Loader2 } from "lucide-react";
 import { BrowserRouter, Route, Routes } from "react-router-dom";
 import Index from "./pages/Index";
 import LoginPage from "./pages/LoginPage";
+import SignupPage from "./pages/SignupPage";
+import ForgotPasswordPage from "./pages/ForgotPasswordPage";
 import NotFound from "./pages/NotFound";
-import BudgetPage from "./pages/BudgetPage";
 import ExpensePage from "./pages/ExpensePage";
-import AdminPage from "./pages/AdminPage";
 
 // Protected App Content - only shown when authenticated
 function ProtectedApp() {
@@ -30,7 +30,17 @@ function ProtectedApp() {
   }
 
   if (!isAuthenticated) {
-    return <LoginPage />;
+    return (
+      <BrowserRouter>
+        <Routes>
+          <Route path="/" element={<LoginPage />} />
+          <Route path="/login" element={<LoginPage />} />
+          <Route path="/signup" element={<SignupPage />} />
+          <Route path="/forgot-password" element={<ForgotPasswordPage />} />
+          <Route path="*" element={<LoginPage />} />
+        </Routes>
+      </BrowserRouter>
+    );
   }
 
   return (
@@ -42,8 +52,6 @@ function ProtectedApp() {
               <Routes>
                 <Route path="/" element={<Index />} />
                 <Route path="/expense" element={<ExpensePage />} />
-                <Route path="/budget" element={<BudgetPage />} />
-                <Route path="/admin" element={<AdminPage />} />
                 {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
                 <Route path="*" element={<NotFound />} />
               </Routes>

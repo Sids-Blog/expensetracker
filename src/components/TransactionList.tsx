@@ -6,24 +6,19 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Checkbox } from "@/components/ui/checkbox";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useToast } from "@/hooks/use-toast";
-import { useData } from "@/lib/data-context";
+import { useEnhancedData } from "@/lib/enhanced-data-context";
 import { Transaction } from "@/lib/supabase";
-import { useTransactions } from "@/lib/transaction-context";
-import { Calendar, DollarSign, Euro, IndianRupee, PoundSterling, Search, Trash2, TrendingDown, TrendingUp, X, Filter, ChevronDown, ChevronUp, Edit, ArrowUpDown, ArrowUp, ArrowDown } from "lucide-react";
+import { useEnhancedTransactions } from "@/lib/enhanced-transaction-context";
+import { Calendar, Search, Trash2, TrendingDown, TrendingUp, X, Filter, ChevronDown, ChevronUp, Edit, ArrowUpDown, ArrowUp, ArrowDown } from "lucide-react";
 import { useMemo, useState } from "react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
 import { format } from "date-fns";
 import jsPDF from "jspdf";
 import autoTable from "jspdf-autotable";
+import { getCurrencySymbol, getCurrencyIcon } from "@/components/ui/currency-display";
+import { TransactionCard } from "@/components/ui/transaction-card";
 
-const getCurrencySymbol = (currency: string) => {
-  switch (currency) {
-    case 'INR': return '₹';
-    case 'EUR': return '€';
-    case 'GBP': return '£';
-    default: return '$';
-  }
-};
+
 
   const sortTransactions = (transactions: Transaction[], field: keyof Transaction, direction: 'asc' | 'desc' | null) => {
     // If direction is null, return default sorting (by date descending)
@@ -66,76 +61,21 @@ const getCurrencySymbol = (currency: string) => {
   };
 
 const TransactionItem = ({ transaction, onDelete, onEdit }: { transaction: Transaction; onDelete: (id: string) => void; onEdit: (transaction: Transaction) => void }) => {
-  const getCurrencyIcon = (currency: string) => {
-    switch (currency) {
-      case 'INR': return <IndianRupee className="h-4 w-4" />;
-      case 'EUR': return <Euro className="h-4 w-4" />;
-      case 'GBP': return <PoundSterling className="h-4 w-4" />;
-      default: return <DollarSign className="h-4 w-4" />;
-    }
-  };
-
-  const getCurrencySymbol = (currency: string) => {
-    switch (currency) {
-      case 'INR': return '₹';
-      case 'EUR': return '€';
-      case 'GBP': return '£';
-      default: return '$';
-    }
-  };
-
   return (
-    <div className={`p-4 border rounded-lg ${transaction.type === 'expense' ? 'border-red-200 bg-red-50' : 'border-emerald-200 bg-emerald-50'}`} onClick={() => onEdit(transaction)} style={{ cursor: 'pointer' }}>
-      <div className="flex items-start justify-between">
-        <div className="flex-1">
-          <div className="flex items-center gap-2 mb-2">
-            {transaction.type === 'expense' ? (
-              <TrendingDown className="h-4 w-4 text-red-600" />
-            ) : (
-              <TrendingUp className="h-4 w-4 text-emerald-600" />
-            )}
-            <span className={`font-medium ${transaction.type === 'expense' ? 'text-red-800' : 'text-emerald-800'}`}>
-              {transaction.category}
-            </span>
-          </div>
-          
-          <div className="flex items-center gap-2 mb-1">
-            {getCurrencyIcon(transaction.currency)}
-            <span className={`text-lg font-semibold ${transaction.type === 'expense' ? 'text-red-700' : 'text-emerald-700'}`}>
-              {getCurrencySymbol(transaction.currency)}{transaction.amount.toFixed(2)}
-            </span>
-          </div>
-          
-          <div className="flex items-center gap-1 text-sm text-gray-500 mb-1">
-            <Calendar className="h-3 w-3" />
-            {transaction.date}
-          </div>
-          
-          {transaction.description && (
-            <p className="text-sm text-gray-600 mb-1">{transaction.description}</p>
-          )}
-          
-          <p className="text-xs text-gray-500">
-            {transaction.payment_method}
-          </p>
-        </div>
-        
-        <Button
-          variant="ghost"
-          size="sm"
-          onClick={e => { e.stopPropagation(); onDelete(transaction.id); }}
-          className="text-gray-400 hover:text-red-600"
-        >
-          <Trash2 className="h-4 w-4" />
-        </Button>
-      </div>
+    <div onClick={() => onEdit(transaction)} style={{ cursor: 'pointer' }}>
+      <TransactionCard
+        transaction={transaction}
+        onDelete={onDelete}
+        onEdit={onEdit}
+        showActions={true}
+      />
     </div>
   );
 };
 
 const TransactionList = () => {
-  const { transactions, removeTransaction, updateTransaction } = useTransactions();
-  const { expenseCategories: availableExpenseCategories, incomeCategories: availableIncomeCategories, paymentMethods } = useData();
+  const { transactions, removeTransaction, updateTransaction } = useEnhancedTransactions();
+  const { expenseCategories: availableExpenseCategories, incomeCategories: availableIncomeCategories, paymentMethods } = useEnhancedData();
   const { toast } = useToast();
   
   const [expenseSearch, setExpenseSearch] = useState("");
@@ -171,8 +111,8 @@ const TransactionList = () => {
         const matchesDate = !expenseDate || t.date === expenseDate;
         const matchesPayment = expensePaymentMethods.length === 0 || (t.payment_method && expensePaymentMethods.includes(t.payment_method));
         let matchesSettled = true;
-        if (settledFilter === 'settled') matchesSettled = t.fullySettled !== false;
-        if (settledFilter === 'unsettled') matchesSettled = t.fullySettled === false;
+        if (settledFilter === 'settled') matchesSettled = t.fully_settled !== false;
+        if (settledFilter === 'unsettled') matchesSettled = t.fully_settled === false;
         return matchesSearch && matchesCategory && matchesDate && matchesPayment && matchesSettled;
       });
     
@@ -312,7 +252,7 @@ const TransactionList = () => {
         t.category,
         t.description || "",
         t.payment_method || "",
-        t.fullySettled === false ? "No" : "Yes",
+        t.fully_settled === false ? "No" : "Yes",
         t.id || ""
       ])
     ];
@@ -363,7 +303,7 @@ const TransactionList = () => {
         t.category,
         t.description || "",
         t.payment_method || "",
-        t.fullySettled === false ? "No" : "Yes"
+        t.fully_settled === false ? "No" : "Yes"
       ]),
     });
     // Get the Y position after the expenses table
@@ -628,12 +568,12 @@ const TransactionList = () => {
                         {/* Settled column */}
                         <th 
                           className="px-2 sm:px-4 py-2 sm:py-3 text-left text-xs sm:text-sm font-medium text-gray-700 cursor-pointer hover:bg-gray-100"
-                          onClick={() => handleSort('fullySettled', true)}
+                          onClick={() => handleSort('fully_settled', true)}
                         >
                           <div className="flex items-center gap-1">
                             <span className="hidden sm:inline">Settled</span>
                             <span className="sm:hidden">Set</span>
-                            {getSortIcon('fullySettled', true)}
+                            {getSortIcon('fully_settled', true)}
                           </div>
                         </th>
                         <th className="px-4 py-3 text-center text-sm font-medium text-gray-700">Actions</th>
@@ -653,7 +593,7 @@ const TransactionList = () => {
                           <tr key={transaction.id} className="hover:bg-gray-50 cursor-pointer" onClick={() => handleEditTransaction(transaction)}>
                             <td className="px-2 sm:px-4 py-2 sm:py-3 text-xs sm:text-sm text-gray-900">{transaction.date}</td>
                             <td className="px-2 sm:px-4 py-2 sm:py-3 text-xs sm:text-sm font-medium text-red-600">
-                              {getCurrencySymbol(transaction.currency)}{transaction.amount.toFixed(2)}
+                              {getCurrencySymbol(transaction.currency as any)}{transaction.amount.toFixed(2)}
                             </td>
                             <td className="px-2 sm:px-4 py-2 sm:py-3 text-xs sm:text-sm text-gray-900">{transaction.category}</td>
                             <td className="px-2 sm:px-4 py-2 sm:py-3 text-xs sm:text-sm text-gray-600">{transaction.payment_method || "-"}</td>
@@ -662,7 +602,7 @@ const TransactionList = () => {
                             </td>
                             {/* Settled cell */}
                             <td className="px-2 sm:px-4 py-2 sm:py-3 text-xs sm:text-sm">
-                              {transaction.fullySettled === false ? (
+                              {transaction.fully_settled === false ? (
                                 <span className="inline-block px-2 py-1 rounded bg-yellow-100 text-yellow-800 text-xs">No</span>
                               ) : (
                                 <span className="inline-block px-2 py-1 rounded bg-green-100 text-green-800 text-xs">Yes</span>
@@ -853,7 +793,7 @@ const TransactionList = () => {
                           <tr key={transaction.id} className="hover:bg-gray-50 cursor-pointer" onClick={() => handleEditTransaction(transaction)}>
                             <td className="px-2 sm:px-4 py-2 sm:py-3 text-xs sm:text-sm text-gray-900">{transaction.date}</td>
                             <td className="px-2 sm:px-4 py-2 sm:py-3 text-xs sm:text-sm font-medium text-emerald-600">
-                              {getCurrencySymbol(transaction.currency)}{transaction.amount.toFixed(2)}
+                              {getCurrencySymbol(transaction.currency as any)}{transaction.amount.toFixed(2)}
                             </td>
                             <td className="px-2 sm:px-4 py-2 sm:py-3 text-xs sm:text-sm text-gray-900">{transaction.category}</td>
                             <td className="px-2 sm:px-4 py-2 sm:py-3 text-xs sm:text-sm text-gray-600 max-w-[120px] sm:max-w-[150px] truncate" title={transaction.description || ""}>
@@ -964,8 +904,8 @@ const TransactionList = () => {
                   <input
                     id="edit-fully-settled"
                     type="checkbox"
-                    checked={editForm.fullySettled ?? true}
-                    onChange={e => handleEditFormChange('fullySettled', e.target.checked)}
+                    checked={editForm.fully_settled ?? true}
+                    onChange={e => handleEditFormChange('fully_settled', e.target.checked)}
                     className="h-4 w-4"
                   />
                   <Label htmlFor="edit-fully-settled" className="text-sm cursor-pointer">

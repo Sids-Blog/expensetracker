@@ -9,7 +9,7 @@ if (!supabaseUrl || !supabaseAnonKey) {
 
 export const supabase = createClient(supabaseUrl, supabaseAnonKey)
 
-// Database types
+// Database types matching the updated schema
 export interface Transaction {
   id?: string
   date: string
@@ -19,7 +19,7 @@ export interface Transaction {
   category: string
   description?: string
   payment_method?: string
-  fullySettled?: boolean // Added for settled status
+  fully_settled?: boolean // Matches database column name
   created_at?: string
 }
 
@@ -27,19 +27,13 @@ export interface Category {
   id?: string
   name: string
   type: 'expense' | 'income'
+  order?: number // Added for ordering
   created_at?: string
 }
 
 export interface PaymentMethod {
   id?: string
   name: string
+  order?: number // Added for ordering
   created_at?: string
-}
-
-export interface AuthSession {
-  id?: string
-  session_token: string
-  device_info?: string
-  created_at?: string
-  expires_at?: string
 } 

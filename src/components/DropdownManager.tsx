@@ -3,10 +3,10 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { useData } from "@/lib/data-context";
+import { useEnhancedData } from "@/lib/enhanced-data-context";
 import { Briefcase, CreditCard, Plus, Tag, Trash2, Pencil, ArrowUp, ArrowDown, GripVertical } from "lucide-react";
 import { useState, useEffect } from "react";
-import { useTransactions } from "@/lib/transaction-context";
+import { useEnhancedTransactions } from "@/lib/enhanced-transaction-context";
 import { DndContext, closestCenter, useSensor, useSensors, PointerSensor, KeyboardSensor, TouchSensor } from '@dnd-kit/core';
 import { arrayMove, SortableContext, sortableKeyboardCoordinates, useSortable, verticalListSortingStrategy } from '@dnd-kit/sortable';
 import { CSS } from '@dnd-kit/utilities';
@@ -50,8 +50,8 @@ const DropdownManager = () => {
     removeIncomeCategory,
     updateCategoryOrder,
     updatePaymentMethodOrder
-  } = useData();
-  const { bulkRenameInTransactions } = useTransactions();
+  } = useEnhancedData();
+  const { bulkRenameInTransactions } = useEnhancedTransactions();
 
   const [newCategory, setNewCategory] = useState("");
   const [newPaymentMethod, setNewPaymentMethod] = useState("");

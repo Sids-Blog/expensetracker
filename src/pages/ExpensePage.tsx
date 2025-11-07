@@ -4,22 +4,37 @@ import ExpenseForm from "@/components/ExpenseForm";
 import IncomeForm from "@/components/IncomeForm";
 import SettingsPage from "@/components/SettingsPage";
 import TransactionList from "@/components/TransactionList";
+import { ProfileSettings } from "@/components/ProfileSettings";
+import { UserManagement } from "@/components/UserManagement";
+import { AdminDebug } from "@/components/AdminDebug";
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { useAuth } from "@/hooks/useAuth";
-import { useTransactions } from "@/lib/transaction-context";
-import { BarChart3, Home, List, LogOut, Plus, PlusCircle, Settings, TrendingDown, TrendingUp } from "lucide-react";
+import { useAuth } from "@/lib/auth-context";
+import { useEnhancedTransactions } from "@/lib/enhanced-transaction-context";
+import { BarChart3, Home, List, Plus, PlusCircle, Settings, TrendingDown, TrendingUp, LogOut, User, Users } from "lucide-react";
 import { useEffect, useRef, useState } from "react";
 import { useNavigate } from "react-router-dom";
     
 const Index = () => {
   const [activeTab, setActiveTab] = useState("dashboard");
   const [showFabMenu, setShowFabMenu] = useState(false);
-  const { logout } = useAuth();
-  const { isOffline, isSyncing } = useTransactions();
+  const { isOffline, isSyncing } = useEnhancedTransactions();
+  const { signOut, profile, isAdmin } = useAuth();
   const [lastSync, setLastSync] = useState<string | null>(null);
   const lastSyncRef = useRef<string | null>(null);
   const navigate = useNavigate();
+
+  const handleLogout = async () => {
+    await signOut();
+  };
+
+  // Debug admin status and force refresh
+  useEffect(() => {
+    console.log('ExpensePage - profile:', profile);
+    console.log('ExpensePage - isAdmin:', isAdmin);
+    console.log('ExpensePage - profile.is_admin:', profile?.is_admin);
+  }, [profile, isAdmin]);
+
   // Update last sync time in localStorage when online and not syncing
   useEffect(() => {
     if (!isOffline && !isSyncing) {
@@ -41,9 +56,7 @@ const Index = () => {
     }
   }, [isOffline, isSyncing]);
 
-  const handleLogout = async () => {
-    await logout();
-  };
+
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-emerald-50 to-blue-50">
@@ -73,6 +86,11 @@ const Index = () => {
                 <span className="sm:hidden">Expenses</span>
                 <span className="hidden sm:inline">Expense tracker</span>
               </h1>
+              {profile && (
+                <div className="text-sm text-gray-600 hidden md:block ml-2">
+                  {profile.full_name || profile.email}
+                </div>
+              )}
             </div>
             <div className="flex items-center space-x-2 sm:space-x-4">
               <Button
@@ -103,7 +121,7 @@ const Index = () => {
               <Button
                 onClick={handleLogout}
                 variant="outline"
-                className="min-h-[44px] min-w-[44px] sm:h-auto sm:w-auto p-2 sm:px-3 sm:py-2 border-gray-300 hover:bg-gray-50"
+                className="min-h-[44px] min-w-[44px] sm:h-auto sm:w-auto p-2 sm:px-3 sm:py-2 border-gray-300 hover:bg-gray-50 flex items-center gap-2"
                 size="sm"
               >
                 <LogOut className="h-4 w-4 sm:mr-2" />
@@ -116,20 +134,39 @@ const Index = () => {
 
       {/* Main Content */}
       <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        {/* Debug Component - Remove after fixing */}
+        <div className="mb-4">
+          <AdminDebug />
+        </div>
+        
         <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
-          <TabsList className="mb-6 bg-gray-100 rounded-xl flex gap-1 p-1 justify-start">
-            <TabsTrigger value="dashboard" className="flex-1 font-semibold text-gray-700 rounded-lg px-3 py-2 transition-colors focus:outline-none data-[state=active]:bg-white data-[state=active]:shadow data-[state=active]:text-black data-[state=active]:font-bold hover:bg-white/70">
+          <TabsList className="mb-6 bg-gray-100 rounded-xl flex gap-1 p-1 justify-start overflow-x-auto">
+            <TabsTrigger value="dashboard" className="flex-shrink-0 font-semibold text-gray-700 rounded-lg px-3 py-2 transition-colors focus:outline-none data-[state=active]:bg-white data-[state=active]:shadow data-[state=active]:text-black data-[state=active]:font-bold hover:bg-white/70">
               <BarChart3 className="h-4 w-4 sm:mr-2" />
               <span className="hidden sm:inline">Dashboard</span>
             </TabsTrigger>
-            <TabsTrigger value="transactions" className="flex-1 font-semibold text-gray-700 rounded-lg px-3 py-2 transition-colors focus:outline-none data-[state=active]:bg-white data-[state=active]:shadow data-[state=active]:text-black data-[state=active]:font-bold hover:bg-white/70">
+            <TabsTrigger value="transactions" className="flex-shrink-0 font-semibold text-gray-700 rounded-lg px-3 py-2 transition-colors focus:outline-none data-[state=active]:bg-white data-[state=active]:shadow data-[state=active]:text-black data-[state=active]:font-bold hover:bg-white/70">
               <List className="h-4 w-4 sm:mr-2" />
               <span className="hidden sm:inline">Transactions</span>
             </TabsTrigger>
-            <TabsTrigger value="categories" className="flex-1 font-semibold text-gray-700 rounded-lg px-3 py-2 transition-colors focus:outline-none data-[state=active]:bg-white data-[state=active]:shadow data-[state=active]:text-black data-[state=active]:font-bold hover:bg-white/70">
+            <TabsTrigger value="categories" className="flex-shrink-0 font-semibold text-gray-700 rounded-lg px-3 py-2 transition-colors focus:outline-none data-[state=active]:bg-white data-[state=active]:shadow data-[state=active]:text-black data-[state=active]:font-bold hover:bg-white/70">
               <PlusCircle className="h-4 w-4 sm:mr-2" />
               <span className="hidden sm:inline">Categories</span>
             </TabsTrigger>
+            <TabsTrigger value="settings" className="flex-shrink-0 font-semibold text-gray-700 rounded-lg px-3 py-2 transition-colors focus:outline-none data-[state=active]:bg-white data-[state=active]:shadow data-[state=active]:text-black data-[state=active]:font-bold hover:bg-white/70">
+              <Settings className="h-4 w-4 sm:mr-2" />
+              <span className="hidden sm:inline">Settings</span>
+            </TabsTrigger>
+            <TabsTrigger value="profile" className="flex-shrink-0 font-semibold text-gray-700 rounded-lg px-3 py-2 transition-colors focus:outline-none data-[state=active]:bg-white data-[state=active]:shadow data-[state=active]:text-black data-[state=active]:font-bold hover:bg-white/70">
+              <User className="h-4 w-4 sm:mr-2" />
+              <span className="hidden sm:inline">Profile</span>
+            </TabsTrigger>
+            {isAdmin && (
+              <TabsTrigger value="users" className="flex-shrink-0 font-semibold text-gray-700 rounded-lg px-3 py-2 transition-colors focus:outline-none data-[state=active]:bg-white data-[state=active]:shadow data-[state=active]:text-black data-[state=active]:font-bold hover:bg-white/70">
+                <Users className="h-4 w-4 sm:mr-2" />
+                <span className="hidden sm:inline">Users</span>
+              </TabsTrigger>
+            )}
           </TabsList>
 
           <TabsContent value="dashboard" className="mt-6">
@@ -155,6 +192,20 @@ const Index = () => {
           <TabsContent value="categories" className="mt-6">
             <DropdownManager />
           </TabsContent>
+
+          <TabsContent value="settings" className="mt-6">
+            <SettingsPage />
+          </TabsContent>
+
+          <TabsContent value="profile" className="mt-6">
+            <ProfileSettings />
+          </TabsContent>
+
+          {isAdmin && (
+            <TabsContent value="users" className="mt-6">
+              <UserManagement currentUserId={profile?.id} />
+            </TabsContent>
+          )}
 
         </Tabs>
       </main>

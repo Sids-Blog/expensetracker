@@ -1,6 +1,6 @@
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { useCurrency } from "@/lib/currency-context";
-import { useTransactions } from "@/lib/transaction-context";
+import { useEnhancedTransactions } from "@/lib/enhanced-transaction-context";
 import { BarChart3, DollarSign, PieChart, TrendingDown, TrendingUp, Wallet, Eye, EyeOff, CreditCard, PiggyBank, AlertCircle } from "lucide-react";
 import { useMemo, useState } from "react";
 import {
@@ -18,17 +18,18 @@ import {
   XAxis,
   YAxis
 } from 'recharts';
-import { useData } from "@/lib/data-context";
+import { useEnhancedData } from "@/lib/enhanced-data-context";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Button } from "@/components/ui/button";
 import React from "react";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
+import { getCurrencySymbol } from "@/components/ui/currency-display";
 
 const Dashboard = () => {
-  const { transactions } = useTransactions();
+  const { transactions } = useEnhancedTransactions();
   const { currency } = useCurrency();
-  const { expenseCategories, incomeCategories, paymentMethods } = useData();
+  const { expenseCategories, incomeCategories, paymentMethods } = useEnhancedData();
   const [showSensitiveData, setShowSensitiveData] = useState(false);
 
   // FILTER STATES
@@ -48,14 +49,7 @@ const Dashboard = () => {
   const [topCatStartDate, setTopCatStartDate] = React.useState("");
   const [topCatEndDate, setTopCatEndDate] = React.useState("");
 
-  const getCurrencySymbol = () => {
-    switch (currency) {
-      case 'INR': return '₹';
-      case 'EUR': return '€';
-      case 'GBP': return '£';
-      default: return '$';
-    }
-  };
+
 
       // Calculate statistics from real transaction data
   const stats = useMemo(() => {
@@ -99,7 +93,7 @@ const Dashboard = () => {
 
     // Calculate unsettled expenses for current month
     const unsettledExpenses = currentMonthTransactions
-      .filter(t => t.type === 'expense' && t.fullySettled === false)
+      .filter(t => t.type === 'expense' && t.fully_settled === false)
       .reduce((sum, t) => sum + t.amount, 0);
 
     // Calculate category breakdown for expenses
@@ -271,7 +265,7 @@ const Dashboard = () => {
   }, [transactions, trendType, trendStartDate, trendEndDate, categoryMonth, dailyCategory, dailyStartDate, dailyEndDate, paymentMethodFilter, topCatStartDate, topCatEndDate]);
 
   const formatAmount = (amount: number) => {
-    return `${getCurrencySymbol()}${Math.abs(amount).toLocaleString(undefined, {
+    return `${getCurrencySymbol(currency as any)}${Math.abs(amount).toLocaleString(undefined, {
       minimumFractionDigits: 2,
       maximumFractionDigits: 2
     })}`;
@@ -474,7 +468,7 @@ const Dashboard = () => {
                 <LineChart data={chartData.monthlyData}>
                   <CartesianGrid strokeDasharray="3 3" />
                   <XAxis dataKey="month" />
-                  <YAxis tickFormatter={(value) => `${getCurrencySymbol()}${value}`} />
+                  <YAxis tickFormatter={(value) => `${getCurrencySymbol(currency as any)}${value}`} />
                   <RechartsTooltip content={CustomTooltip as any} />
                   <Legend />
                   <Line 
@@ -583,7 +577,7 @@ const Dashboard = () => {
                 <BarChart data={chartData.dailyData}>
                   <CartesianGrid strokeDasharray="3 3" />
                   <XAxis dataKey="day" />
-                  <YAxis tickFormatter={(value) => `${getCurrencySymbol()}${value}`} />
+                  <YAxis tickFormatter={(value) => `${getCurrencySymbol(currency as any)}${value}`} />
                   <RechartsTooltip content={CustomTooltip as any} />
                   <Bar dataKey="expenses" fill="#ef4444" name="Expenses" />
                 </BarChart>
